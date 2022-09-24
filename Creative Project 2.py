@@ -6,46 +6,25 @@ startSpeed = 2 #Amount of movements taken by the snake per second.
 addedSpeed = .12 #Added to `startSpeed` per apple eaten.
 maxSpeed = 5 #Speed will not increase if it's equal to or greater than this.
 startSize = 4 #Snake starting size.
-wallTeleport = True #Should the snake teleport to the other side of the screen or die hitting a wall?
+wallTeleport = False #Should the snake teleport to the other side of the screen or die hitting a wall?
 
 defShape = Rect(0, 0, 400/25, 400/25, border="white", borderWidth=2, visible = False) #Default shape used to generate new snake parts. Visible value will be changed. You can make this anyting you want and the snake will try to work with it!
 
 ###Actual code:
 #Setup:
-scoreDigits = [[
-    Image("https://compsci-resources.s3.us-west-2.amazonaws.com/Snake/Snake0.png", 400, 380-280-26),
-    Image("https://compsci-resources.s3.us-west-2.amazonaws.com/Snake/Snake1.png", 400, 380-280-26),
-    Image("https://compsci-resources.s3.us-west-2.amazonaws.com/Snake/Snake2.png", 400, 380-280-26),
-    Image("https://compsci-resources.s3.us-west-2.amazonaws.com/Snake/Snake3.png", 400, 380-280-26),
-    Image("https://compsci-resources.s3.us-west-2.amazonaws.com/Snake/Snake4.png", 400, 380-280-26),
-    Image("https://compsci-resources.s3.us-west-2.amazonaws.com/Snake/Snake5.png", 400, 380-280-26),
-    Image("https://compsci-resources.s3.us-west-2.amazonaws.com/Snake/Snake6.png", 400, 380-280-26),
-    Image("https://compsci-resources.s3.us-west-2.amazonaws.com/Snake/Snake7.png", 400, 380-280-26),
-    Image("https://compsci-resources.s3.us-west-2.amazonaws.com/Snake/Snake8.png", 400, 380-280-26),
-    Image("https://compsci-resources.s3.us-west-2.amazonaws.com/Snake/Snake9.png", 400, 380-280-26),
-    ],[
-    Image("https://compsci-resources.s3.us-west-2.amazonaws.com/Snake/Snake0.png", 400, 380-280-26),
-    Image("https://compsci-resources.s3.us-west-2.amazonaws.com/Snake/Snake1.png", 400, 380-280-26),
-    Image("https://compsci-resources.s3.us-west-2.amazonaws.com/Snake/Snake2.png", 400, 380-280-26),
-    Image("https://compsci-resources.s3.us-west-2.amazonaws.com/Snake/Snake3.png", 400, 380-280-26),
-    Image("https://compsci-resources.s3.us-west-2.amazonaws.com/Snake/Snake4.png", 400, 380-280-26),
-    Image("https://compsci-resources.s3.us-west-2.amazonaws.com/Snake/Snake5.png", 400, 380-280-26),
-    Image("https://compsci-resources.s3.us-west-2.amazonaws.com/Snake/Snake6.png", 400, 380-280-26),
-    Image("https://compsci-resources.s3.us-west-2.amazonaws.com/Snake/Snake7.png", 400, 380-280-26),
-    Image("https://compsci-resources.s3.us-west-2.amazonaws.com/Snake/Snake8.png", 400, 380-280-26),
-    Image("https://compsci-resources.s3.us-west-2.amazonaws.com/Snake/Snake9.png", 400, 380-280-26),
-    ],[
-    Image("https://compsci-resources.s3.us-west-2.amazonaws.com/Snake/Snake0.png", 400, 380-280-26),
-    Image("https://compsci-resources.s3.us-west-2.amazonaws.com/Snake/Snake1.png", 400, 380-280-26),
-    Image("https://compsci-resources.s3.us-west-2.amazonaws.com/Snake/Snake2.png", 400, 380-280-26),
-    Image("https://compsci-resources.s3.us-west-2.amazonaws.com/Snake/Snake3.png", 400, 380-280-26),
-    Image("https://compsci-resources.s3.us-west-2.amazonaws.com/Snake/Snake4.png", 400, 380-280-26),
-    Image("https://compsci-resources.s3.us-west-2.amazonaws.com/Snake/Snake5.png", 400, 380-280-26),
-    Image("https://compsci-resources.s3.us-west-2.amazonaws.com/Snake/Snake6.png", 400, 380-280-26),
-    Image("https://compsci-resources.s3.us-west-2.amazonaws.com/Snake/Snake7.png", 400, 380-280-26),
-    Image("https://compsci-resources.s3.us-west-2.amazonaws.com/Snake/Snake8.png", 400, 380-280-26),
-    Image("https://compsci-resources.s3.us-west-2.amazonaws.com/Snake/Snake9.png", 400, 380-280-26),
-    ]]
+scoreDigits = []
+for i in range(0, 3):
+    scoreDigits.append([])
+    for x in range(0,10):
+        scoreDigits[len(scoreDigits)-1].append(Image("https://compsci-resources.s3.us-west-2.amazonaws.com/Snake/Snake"+str(x)+".png", 400, 380-280-26))
+
+snake = Group() #All shapes within `snakeShapes` will be placed in this group. It exists mainly for its `hitTest()` method.
+snakeShapes = [] #Setup for the numerically sorted snake pieces.
+snakeReserve = []
+for i in range(0, 21*16):
+    snakeReserve.append(Rect(400, 400, 400/25-2, 400/25-2, fill = rgb(60, 65, 44), border = rgb(168, 198, 78), borderWidth = 1))
+    snake.add(snakeReserve[len(snakeReserve)-1])
+
 deathSounds = [
     Sound("https://compsci-resources.s3.us-west-2.amazonaws.com/Snake/death1.mp3")
     ]
@@ -54,14 +33,12 @@ eatSounds = [
     Sound("https://compsci-resources.s3.us-west-2.amazonaws.com/Snake/eat2.mp3"),
     Sound("https://compsci-resources.s3.us-west-2.amazonaws.com/Snake/eat3.mp3")
     ]
-song = Sound("https://compsci-resources.s3.us-west-2.amazonaws.com/Snake/song2.mp3")
+song = Sound("https://compsci-resources.s3.us-west-2.amazonaws.com/Snake/song3.mp3")
 app.background = rgb(168, 198, 78) #Sets background
 direction = Label("up", 400, 400, visible = False) #Creates the label that will later tell `move()` which direction to go.
 lastMove = Label("", 400, 400, visible = False) #Copied from `direction` on every move.
 score = Label("0", 400, 400, visible = False) #Similar to `direction`. Increases with `eat()`.
 playArea = Rect(200, 400-20, 400-40, 280, border = rgb(60, 65, 44), borderWidth = 10, fill = None, align = "bottom") #The box that goes around the gameplay area. Purely cosmetic.
-snakeShapes = [] #Setup for the numerically sorted snake pieces.
-snake = Group() #All shapes within `snakeShapes` will be placed in this group. It exists mainly for its `hitTest()` method.
 gameImage = Image("https://compsci-resources.s3.us-west-2.amazonaws.com/Snake/SnakeGame.png", 400, 400)
 overImage = Image("https://compsci-resources.s3.us-west-2.amazonaws.com/Snake/SnakeOver.png", 400, 400)
 titleImage = Image("https://compsci-resources.s3.us-west-2.amazonaws.com/Snake/SnakeLogo3.png",200-113,80) #The image displayed before the game starts. Setting it's `left` value to 400 will make the game start.
@@ -83,44 +60,45 @@ def updateScoreboard():
 
 def endGame(): #Tony Stark dies.
     song.pause()
+    score.value = "0"
     playSound(deathSounds)
-    apple.visible = False
+    apple.top, apple.left = 0, 400
     for i in scoreDigits:
         for x in i:
             x.left = 400
     sleep(.1)
     Sound("https://compsci-resources.s3.us-west-2.amazonaws.com/Snake/thud2.mp3").play()
-    gameImage.left, gameImage.top = 19, 78
+    gameImage.left, gameImage.top = 18, 78
     sleep(.3)
     Sound("https://compsci-resources.s3.us-west-2.amazonaws.com/Snake/thud3.mp3").play()
     overImage.left, overImage.top = 214, 78
+    sleep(1)
     for i in range(0, len(snakeShapes)):
-        snakeShapes[(len(snakeShapes)-i)-1].visible = False
-        sleep(0)
-    print("You're bad and you should feel bad.") #Entice the player to give it another go!
+        snakeShapes[0].top, snakeShapes[0].left = 400, 400
+        snakeShapes[0].borderWidth = 2
+        snakeReserve.append(snakeShapes.pop(0))
     app.stepsPerSecond = 0 #Stop the game loop.
-    app.stop() #Kill the process altogether.
 
-def moveApple(): #It's in the name.
+def moveApple(): #Moves the apple to a random location on the grid. Automagically avoids placing the apple on the snake body.
     randomLeft, randomTop = (random.randrange(1,21)*16)+34+1, (random.randrange(1,16)*16)+114+1 
     apple.left, apple.top = randomLeft, randomTop #Move `apple` to a random location on the grid
     if snake.hitTest(randomLeft, randomTop): #Make sure the apple doesn't move on top of the snake.
         moveApple()
 
 def makeSnake(): #Makes the starting snake parts.
-    snakeShapes.append(Rect(200, 200, 400/25-2, 400/25-2, fill = rgb(60, 65, 44), align = "center", border = rgb(168, 198, 78), borderWidth = 1)) #Create the first rectangle.
+    gameImage.top, gameImage.left, overImage.top, overImage.left = 400, 400, 400, 400
+    snakeShapes.append(snakeReserve.pop(0)) #Create the first rectangle.
+    snakeShapes[0].top, snakeShapes[0].left = 201-((400/25)/2), 201+((400/25)/2)
     genParts(startSize-1) #A Snake is Born (2018)
     moveApple() #Get the apple ready for consumption
     updateScoreboard()
     Sound("https://compsci-resources.s3.us-west-2.amazonaws.com/Snake/start.mp3").play()
-    song.play(loop = True)
+    song.play(loop = True, restart = True)
 
 def genParts(amount): #Adds length to the snake. Use `amount` to change how many squares you want added.
     for i in range(0, amount): #Iterate through `amount` times
         lastShape = snakeShapes[len(snakeShapes)-1] #Get the last shape in the snake for use as a reference
-        snakeShapes.append(Rect(lastShape.left, lastShape.top, lastShape.width, lastShape.height, fill = rgb(60, 65, 44), border = rgb(168, 198, 78), borderWidth = 1)) #Use the properties of 'lastShape' to create a new part of the snake, making it longer.
-        for x in snakeShapes: #Iterate through every item in `snakeShapes`
-            snake.add(x) #Add the item currently being looked at by the for loop to the `snake` group.
+        snakeShapes.append(snakeReserve.pop(0)) #Use the properties of 'lastShape' to create a new part of the snake, making it longer.
 
 def move(facing): #Move the tail of the snake to the head based off of `facing`.
     lastShape = snakeShapes[len(snakeShapes)-1] #Bind the current last rectangle in `snakeShapes`.
@@ -156,7 +134,7 @@ def eat(): #5
     playSound(eatSounds)
 
 def onKeyPress(key): #Manages keypresses and their functions:
-    if titleImage.left == 200-113: #Start the game if `titleImage` is in it's starting location:
+    if len(snakeShapes) == 0: #Start the game if `snakeShapes` is empty:
         titleImage.left = 400 #Move `titleImage` so that it's no longer visible.
         creditImage.left = 400 #Same thing for credits
         makeSnake() #Finally!
@@ -222,5 +200,7 @@ def onStep(): #Runs every step:
         elif doMove == "Skip":
             print("Teleported")
         else:
-            if move(direction.value) == False: endGame() #Pass direction to `move()` and check for collision with snake.
+            if move(direction.value) == False: #Pass direction to `move()` and check for collision with snake.
+                endGame()
+                return
         if apple.hitsShape(snakeShapes[0]): eat() #Gobble down that apple!
